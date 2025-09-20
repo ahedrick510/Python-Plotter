@@ -293,17 +293,20 @@ class Plotter:
                 os.makedirs(self.foldername + '\\Pickles')
 
             pickle_name = input("Enter name for pickle file (without .pkl extension, NO SPACES): ")
-            with open(self.foldername + '\\Pickles\\' + pickle_name + '_class.pkl', 'wb') as f:
+            with open(self.foldername + '\\Pickles\\' + pickle_name + '.pkl', 'wb') as f:
                 pickle.dump(self, f)
             print(f"Class pickled!")
 
         save_plot = input("Do you want to save the plot as an image file? (y/n): ")
         if save_plot.lower() == 'y':
+            # check if there is a folder called "Plots" in the given folder, if not create it
+            if not os.path.exists(self.foldername + '\\Plots'):
+                os.makedirs(self.foldername + '\\Plots')
             plot_name = input("Enter name for figure (or hit enter to save as title of plot): ")
             if plot_name:
-                plt.savefig(self.foldername + '\\' + plot_name + '.png',bbox_inches='tight')
+                plt.savefig(self.foldername + '\\Plots\\' + plot_name + '.png',bbox_inches='tight')
                 print(f"Plot saved to {self.foldername} as {plot_name+ '.png'}")
             else:
-                plt.savefig(self.foldername + '\\' + self.title + '.png',bbox_inches='tight')
+                plt.savefig(self.foldername + '\\Plots\\' + self.title + '.png',bbox_inches='tight')
                 print(f"Plot saved to {self.foldername} as {self.title + '.png'}")
 

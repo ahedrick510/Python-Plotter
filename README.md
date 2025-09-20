@@ -2,7 +2,7 @@
 ## Make plotting data from multiple related experiments on the same plot as painless as possible
 
 ### Top Level Explanation:
-`PlotterClass.py` allows the user to compare data from multiple trials on one python plot. Every trial must be the same length of time. There are two types of plots: standard 2D plot and twin-axis 2D plot. The user is prompted to select which files they want to plot and which column(s) from each file. Before the plot is displayed, the user is asked whether they want to save the data as a pickle file for plotting again later (will plot same data with whatever settings are listed in `Plotter.py`) and if they want to save the plot.
+`PlotterClass.py` allows the user to compare data from multiple trials on one python plot. Every trial must be the same length of time. There are two types of plots: standard 2D plot and twin-axis 2D plot. The user is prompted to select which files they want to plot and which column(s) from each file. Before the plot is displayed, the user is asked whether they want to save the data as a pickle file for plotting again later (will plot same data with whatever settings are listed in `Plotter.py`) and if they want to save the plot. Plots and Pickles are saved corresponding folders in the specified path from `foldername`.
 
 ### Instructions:
 1. Open `Plotter.py`
