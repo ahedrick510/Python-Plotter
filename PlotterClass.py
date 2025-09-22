@@ -15,14 +15,15 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import os
 import pickle
+import scienceplots
 
 # Plotter class
 class Plotter:
-    def __init__(self, foldername, verbose, title, xlabel, ylabel1, ylabel2, xlimits, ylimits1, ylimits2, legend, figsize, title_fontsize, label_fontsize, tick_fontsize, legend_fontsize):
+    def __init__(self, foldername, plotstyle, verbose, title, xlabel, ylabel1, ylabel2, xlimits, ylimits1, ylimits2, legend, figsize, title_fontsize, label_fontsize, tick_fontsize, legend_fontsize):
         self.foldername = foldername # folder name where the data is stored
+        self.plotstyle = plotstyle # plot style to use
         self.title = title # title of the plot
         self.xlabel = xlabel # x-axis label
         self.ylabel1 = ylabel1 # y-axis label
@@ -51,6 +52,7 @@ class Plotter:
             plotpickle = pickle.load(f)
 
         plotpickle.foldername = self.foldername # update foldername in case moved
+        plotpickle.plotstyle = self.plotstyle # update plotstyle
         plotpickle.verbose = self.verbose # update verbose setting
         plotpickle.title = self.title # update title
         plotpickle.xlabel = self.xlabel # update xlabel
@@ -84,7 +86,7 @@ class Plotter:
         for i, file in enumerate(self.data_files):
             print(f"File {i}: {file}")
 
-        temp_indices = input("\nEnter indices for data you want to plot, separated by commas: ")
+        temp_indices = input("\nEnter indices for data you want to plot (comma separated): ")
         try:
             self.selected_indices = [int(x) for x in temp_indices.split(',')]
             if not all(0 <= idx < data_file_len for idx in self.selected_indices):
@@ -92,7 +94,7 @@ class Plotter:
         except ValueError:
             print("Invalid input. Please enter comma separated indices.")
 
-        # Load the selected data files into dataframes
+        # Load the selected data files into dataframes dictionary
         self.selected_files = [self.data_files[i] for i in self.selected_indices]
         self.dataframes = {}
         for file in self.selected_files:
@@ -111,7 +113,8 @@ class Plotter:
                 print(df.head())
             print("\n\n\n\n")
 
-    def select_columns_single_axis(self):
+    def plot_single_axis(self):
+        self.select_data()
         self.plot_type = 'single_axis'
 
         # Obtain x-axis (common to all plots)
@@ -134,17 +137,28 @@ class Plotter:
             print(f"\nColumns in {file}:")
             for i, col in enumerate(df.columns):
                 print(f"Column {i}: {col}")
-            y_idx = int(input(f"\nEnter index of column to plot on y-axis for {file}: "))
-            label = input(f"\nEnter label for {file} (or press Enter to use ylabel name): ")
-            self.columns[file] = (df.columns[y_idx], label if label else self.ylabel1)
+            y_idx = input(f"\nEnter index of column(s) to plot on y-axis for {file} (comma separated): ")
+            y_idx_int = [int(x) for x in y_idx.split(',')]
+
+            cur_cols = []
+            for idx in y_idx_int:
+                label = input(f"\nEnter label for column {idx} for {file} (or press Enter to use column name): ")
+                cur_cols.append((df.columns[idx], label if label else df.columns[idx]))
+            
+            # Store as list of tuples
+            self.columns[file] = tuple(cur_cols)
 
         if self.verbose:
             print("\nSelected columns for plotting:")
-            for file, (y_col,lab) in self.columns.items():
-                print(f"{file}: y -> {y_col}, label -> {lab}")
+            for file, col in self.columns.items():
+                for (y_col, lab) in self.columns[file]:
+                    print(f"{file}: y -> {y_col}, label -> {lab}")
             print("\n\n\n\n")
+        
+        self.plot_data()
 
-    def select_columns_twin_axes(self):
+    def plot_twin_axes(self):
+        self.select_data()
         # Prompts user to select which columns to plot on x and y axes for twin axes
         self.plot_type = 'twin_axes'
 
@@ -169,41 +183,65 @@ class Plotter:
             for i, col in enumerate(df.columns):
                 print(f"Column {i}: {col}")
 
-            # x_idx = int(input(f"\nEnter index of column to plot on x-axis for {file}: "))
-            y_idx = int(input(f"\nEnter index of column to plot on y-axis for {file}: "))
-            y_axis = int(input(f"\nIs this y-axis for the first or second axis? (Enter 1 or 2): "))
-            label = input(f"\nEnter label for {file} (or press Enter to use ylabel name): ")
-            self.columns[file] = (df.columns[y_idx], y_axis, label if label else (self.ylabel1 if y_axis == 1 else self.ylabel2))
+            y_idx = input(f"\nEnter index of column(s) to plot on y-axis for {file} (comma separated): ")
+            y_idx_int = [int(x) for x in y_idx.split(',')]
+
+            cur_cols = []
+            for idx in y_idx_int:
+                label = input(f"\nEnter label for column {idx} for {file} (or press Enter to use column name): ")
+                y_axis = int(input(f"\nIs this y-axis for the first or second axis? (Enter 1 or 2): "))
+                cur_cols.append((df.columns[idx], y_axis, label if label else df.columns[idx]))
+            
+            # Store as list of tuples
+            self.columns[file] = tuple(cur_cols)
 
         if self.verbose:
             print("\nSelected columns for plotting:")
-            for file, (y_col,y_ax,lab) in self.columns.items():
-                print(f"{file}: y -> {y_col}, y-axis {y_ax}, label -> {lab}")
+            for file, col in self.columns.items():
+                for (y_col, y_ax, lab) in self.columns[file]:
+                    print(f"{file}: y -> {y_col}, y-axis {y_ax}, label -> {lab}")
             print("\n\n\n\n")
 
+        self.plot_data()
+
     def plot_data(self):
-
-
         # Plots the selected data with given customizations.
-        plt.style.use('seaborn-talk')
+        # Set plot style
+        if self.plotstyle == 'seaborn-talk':
+            plt.style.use('seaborn-talk')
+        elif self.plotstyle == 'science':
+            plt.style.use('science')
+        elif self.plotstyle == 'science-ieee':
+            plt.style.use(['science','ieee'])
+        else:
+            print("Invalid plot style. Using default.")
+            plt.style.use('seaborn-talk')
         colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'tab:brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
-
+        
 
         if self.plot_type == 'twin_axes':
             if not self.figsize:
                 self.figsize = (10, 6)
             fig, ax1 = plt.subplots(figsize=self.figsize)
             ax2 = ax1.twinx()
+            
+            ax1_color = 'tab:blue'
+            ax2_color = 'tab:orange'
+            for file, df in self.dataframes.items():
+                for (y_col, y_ax, label) in self.columns[file]:
+                    if y_ax == 1:
+                        ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax1_color, alpha=1, label=label)  
+                    else:
+                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, label=label)
 
-            for i, (file, df) in enumerate(self.dataframes.items()):
-                y_col = self.columns[file][0]
-                y_axis = self.columns[file][1]
-                label = self.columns[file][2]
-                if y_axis == 1:
-                    ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], label=label, color=f'C{i}', alpha=1)
-                else:
-                    ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], label=label, color=f'C{i+2}', alpha=0.7)
+            # set axis colors
+            ax1.yaxis.label.set_color(ax1_color)
+            ax1.spines['left'].set_color(ax1_color)
+            ax1.tick_params(axis='y', colors=ax1_color)
 
+            ax2.yaxis.label.set_color(ax2_color)
+            ax2.spines['right'].set_color(ax2_color)
+            ax2.tick_params(axis='y', colors=ax2_color)
             if self.title:
                 if self.title_fontsize is False:
                     ax1.set_title(self.title)
@@ -231,13 +269,19 @@ class Plotter:
                 ax1.set_ylim(self.ylimits1)
             if self.ylimits2:
                 ax2.set_ylim(self.ylimits2)
+
             if self.legend:
+                # remove duplicate labels in legend
+                handles1, labels1 = ax1.get_legend_handles_labels()
+                handles2, labels2 = ax2.get_legend_handles_labels()
+                by_label1 = dict(zip(labels1, handles1))
+                by_label2 = dict(zip(labels2, handles2))
                 if self.legend_fontsize is False:
-                    ax1.legend(loc='upper left')
-                    ax2.legend(loc='lower right')
+                    ax1.legend(by_label1.values(), by_label1.keys(), loc ='upper left')
+                    ax2.legend(by_label2.values(), by_label2.keys(), loc ='lower right')
                 else:
-                    ax1.legend(loc='upper left', fontsize=self.legend_fontsize)
-                    ax2.legend(loc='lower right', fontsize=self.legend_fontsize)
+                    ax1.legend(by_label1.values(), by_label1.keys(), loc ='upper left', fontsize=self.legend_fontsize)
+                    ax2.legend(by_label2.values(), by_label2.keys(), loc ='lower right', fontsize=self.legend_fontsize)
             ax1.grid()
 
             self.save_data_plot()
@@ -248,10 +292,15 @@ class Plotter:
             if not self.figsize:
                 self.figsize = (10, 6)
             plt.figure(figsize=self.figsize)
-            for i, (file, df) in enumerate(self.dataframes.items()):
-                y_col = self.columns[file][0]
-                label = self.columns[file][1]
-                plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[i], alpha=1, label=label)
+
+            color_counter = 0
+            for file, df in self.dataframes.items():
+                for (y_col, label) in self.columns[file]:
+                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
+                    color_counter += 1
+
+
 
             if self.title:
                 if self.title_fontsize is False:
@@ -275,10 +324,13 @@ class Plotter:
             if self.ylimits1:
                 plt.ylim(self.ylimits1)
             if self.legend:
+                # remove duplicate labels in legend
+                handles, labels = plt.gca().get_legend_handles_labels()
+                by_label = dict(zip(labels, handles))
                 if self.legend_fontsize is False:
-                    plt.legend()
+                    plt.legend(by_label.values(), by_label.keys())
                 else:
-                    plt.legend(fontsize=self.legend_fontsize)
+                    plt.legend(by_label.values(), by_label.keys(), fontsize=self.legend_fontsize)
             plt.grid()
 
             self.save_data_plot()
