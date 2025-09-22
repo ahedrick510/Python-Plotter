@@ -76,6 +76,15 @@ class Plotter:
         # then prompts user to select which files to plot. Finally, the function
         # loads the selected files into pandas dataframes.
 
+        # Print intro message
+        print("\n\n")
+        print("##############################################")
+        print("#                                            #")
+        print("#       WELCOME TO THE PLOTTING TOOL :)      #")
+        print("#                                            #")
+        print("##############################################")
+        print("\n\n")
+
         # Make a list of data files
         path = self.foldername
         self.data_files = [f for f in os.listdir(path) if f.endswith('.xlsx') or f.endswith('.csv')]

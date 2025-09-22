@@ -26,10 +26,8 @@ legend_fontsize = False
 PlotData = Plotter(foldername, plotstyle, verbose, title, xlabel, ylabel1, ylabel2, xlimits=xlimits, ylimits1=ylimits1, ylimits2=ylimits2, legend=legend, 
                    figsize=figsize, title_fontsize=title_fontsize, label_fontsize=label_fontsize, tick_fontsize=tick_fontsize, legend_fontsize=legend_fontsize)
 
-# # Run this if you want to plot from a pickle file
-# PlotData.plot_pickle()
-
-# Run ONE of the following two lines to select columns and plot
-# PlotData.plot_twin_axes() # run this line for twin y-axes
-PlotData.plot_single_axis() # run this line for single y-axis
+# Run ONE of the following three lines
+# PlotData.plot_pickle()        # run this if you want to plot from a pickle file
+# PlotData.plot_twin_axes()     # run this line for twin y-axes
+PlotData.plot_single_axis()     # run this line for single y-axis
 
