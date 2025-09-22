@@ -3,12 +3,11 @@ from PlotterClass import Plotter
 # Plotter code
 foldername = r"C:\Users\aimrl\Documents\GitHub\Python-Plotter\Sample Data"
 # plotstyle = 'seaborn-talk'  # 'seaborn-talk' or 'science' or 'science-ieee'
-# plotstyle = 'science'
-plotstyle = 'science-ieee'
+plotstyle = 'science'
 verbose = False
-title = "Example Plot"
-xlabel = "Time (s)"
-ylabel1 = "Y Label 1"
+title = "Sample Plot"
+xlabel = "X Label"
+ylabel1 = "Y Label"
 ylabel2 = "Y Label 2"
 xlimits = [0, 1]
 ylimits1 = False
@@ -16,7 +15,8 @@ ylimits2 = False
 legend = True
 
 # False = default sizes
-figsize = False
+figsize = (3.5, 2.625) # figsize for science style
+# figsize = False # default figsize
 title_fontsize = False
 label_fontsize = False
 tick_fontsize = False

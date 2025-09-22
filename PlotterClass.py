@@ -300,8 +300,6 @@ class Plotter:
                     plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
                     color_counter += 1
 
-
-
             if self.title:
                 if self.title_fontsize is False:
                     plt.title(self.title)
@@ -356,9 +354,9 @@ class Plotter:
                 os.makedirs(self.foldername + '\\Plots')
             plot_name = input("Enter name for figure (or hit enter to save as title of plot): ")
             if plot_name:
-                plt.savefig(self.foldername + '\\Plots\\' + plot_name + '.png',bbox_inches='tight')
+                plt.savefig(self.foldername + '\\Plots\\' + plot_name + '.png',bbox_inches='tight',dpi=300)
                 print(f"Plot saved to {self.foldername} as {plot_name+ '.png'}")
             else:
-                plt.savefig(self.foldername + '\\Plots\\' + self.title + '.png',bbox_inches='tight')
+                plt.savefig(self.foldername + '\\Plots\\' + self.title + '.png',bbox_inches='tight',dpi=300)
                 print(f"Plot saved to {self.foldername} as {self.title + '.png'}")
 
