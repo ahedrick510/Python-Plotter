@@ -136,7 +136,7 @@ class Plotter:
         print(f"\nColumns in {x_key}:")
         for i, col in enumerate(self.dataframes[x_key].columns):
             print(f"Column {i}: {col}")
-        self.x_idx = int(input("\nEnter index of column to plot on x-axis: "))
+        self.x_idx = int(input("\nEnter index of column to use for x-axis: "))
         self.x_data = self.dataframes[x_key].columns[self.x_idx]
         self.x_data_values = np.array(self.dataframes[x_key][self.x_data])
 
@@ -181,7 +181,7 @@ class Plotter:
         print(f"\nColumns in {x_key}:")
         for i, col in enumerate(self.dataframes[x_key].columns):
             print(f"Column {i}: {col}")
-        self.x_idx = int(input("\nEnter index of column to plot on x-axis: "))
+        self.x_idx = int(input("\nEnter index of column to use for x-axis: "))
         self.x_data = self.dataframes[x_key].columns[self.x_idx]
         self.x_data_values = np.array(self.dataframes[x_key][self.x_data])
 
@@ -356,7 +356,7 @@ class Plotter:
                 pickle.dump(self, f)
             print(f"Class pickled!")
 
-        save_plot = input("Do you want to save the plot as an image file? (y/n): ")
+        save_plot = input("Do you want to save the plot as an png file? (y/n): ")
         if save_plot.lower() == 'y':
             # check if there is a folder called "Plots" in the given folder, if not create it
             if not os.path.exists(self.foldername + '\\Plots'):
