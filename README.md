@@ -5,11 +5,11 @@
 `PlotterClass.py` allows the user to compare data from multiple trials on one python plot. Every trial must be the same length of time. There are two types of plots: standard 2D plot and twin-axis 2D plot. The user is prompted to select which files they want to plot and which column(s) from each file. Before the plot is displayed, the user is asked whether they want to save the data as a pickle file for plotting again later (will plot same data with whatever settings are listed in `Plotter.py`) and if they want to save the plot as a png. Plots and Pickles are saved in corresponding folders in the specified path from `foldername`.
 
 ### Instructions:
-0. Install required packages using `pip`: `numpy`, `pandas`, `matplotlib`, `os`, `pickle`, and `scienceplots` (optional)
-1. Open `Plotter.py`
-2. Make sure all data you want to plot is in one folder, copy that folder name into variable `foldername`
-3. Make any desired edits to the plot format variables
-4. Run code, follow instructions
+0. Install required packages: `numpy`, `pandas`, `matplotlib`, `os`, and `pickle`. `scienceplots` recommended but not required.
+1. Open `Plotter.py`.
+2. Make sure all data you want to plot is in one folder, copy that folder name into variable `foldername`.
+3. Make any desired edits to the plot format variables.
+4. Run code, follow instructions.
 
 ### Notes:
 1. Data must be in .csv or .xlsx files (doesn't matter which). Column titles should be in first row.
