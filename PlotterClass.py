@@ -236,12 +236,14 @@ class Plotter:
             
             ax1_color = 'tab:blue'
             ax2_color = 'tab:orange'
+
             for file, df in self.dataframes.items():
                 for (y_col, y_ax, label) in self.columns[file]:
                     if y_ax == 1:
                         ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax1_color, alpha=1, label=label)  
                     else:
-                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, label=label)
+                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, linestyle = "--", label=label)
+
 
             # set axis colors
             ax1.yaxis.label.set_color(ax1_color)
@@ -291,7 +293,7 @@ class Plotter:
                 else:
                     ax1.legend(by_label1.values(), by_label1.keys(), loc ='upper left', fontsize=self.legend_fontsize)
                     ax2.legend(by_label2.values(), by_label2.keys(), loc ='lower right', fontsize=self.legend_fontsize)
-            ax1.grid()
+            # ax1.grid()
 
             self.save_data_plot()
             plt.show()
@@ -305,8 +307,10 @@ class Plotter:
             color_counter = 0
             for file, df in self.dataframes.items():
                 for (y_col, label) in self.columns[file]:
-                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
-                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
+                    if color_counter == 0:
+                        plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
+                    if color_counter == 1:
+                        plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter+1], alpha=1, linestyle = '--', label=label)
                     color_counter += 1
 
             if self.title:
@@ -335,10 +339,10 @@ class Plotter:
                 handles, labels = plt.gca().get_legend_handles_labels()
                 by_label = dict(zip(labels, handles))
                 if self.legend_fontsize is False:
-                    plt.legend(by_label.values(), by_label.keys())
+                    plt.legend(by_label.values(), by_label.keys(), loc = 'lower right')
                 else:
                     plt.legend(by_label.values(), by_label.keys(), fontsize=self.legend_fontsize)
-            plt.grid()
+            # plt.grid()
 
             self.save_data_plot()
             plt.show()
