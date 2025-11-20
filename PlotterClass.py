@@ -1,7 +1,7 @@
 ###################################### 
 # PLOTTER CLASS ######################
 # BY: ALEXANDER HEDRICK ##############
-# LAST UPDATED: 2025-09-19 ###########
+# LAST UPDATED: 2025-11-20 ###########
 ######################################
 
 # The goal of this class is to make plotting data as easy, quick, and customizable as possible,
@@ -17,6 +17,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import pickle
+from scipy.interpolate import interp1d
 import scienceplots
 
 # Plotter class
@@ -213,6 +214,56 @@ class Plotter:
 
         self.plot_data()
 
+    def plot_bode(self, start_freq, end_freq, sampling_rate):
+        # Prompts user to select which column is input and which column(s) are output for bode plot
+        self.select_data()
+        self.plot_type = 'bode'
+
+        # Record frequency parameters
+        self.start_freq = start_freq        # Hz, start frequency of chirp
+        self.end_freq = end_freq            # Hz, end frequency of chirp
+        self.sampling_rate = sampling_rate  # Hz, sampling rate of INPUT signal
+
+        # Obtain input signal 
+        for i, key in enumerate(self.dataframes):
+            print(f"Key {i}: {key}")
+        self.frame_with_x = int(input("\nEnter key of dataframe to use for input signal: "))
+        x_key = list(self.dataframes.keys())[self.frame_with_x]
+
+        # Prompt user to select input from selected dataframe
+        print(f"\nColumns in {x_key}:")
+        for i, col in enumerate(self.dataframes[x_key].columns):
+            print(f"Column {i}: {col}")
+        self.x_idx = int(input("\nEnter index of column to use for input signal: "))
+        self.x_data = self.dataframes[x_key].columns[self.x_idx]
+        self.x_data_values = np.array(self.dataframes[x_key][self.x_data])
+
+        # Prompt user to select signals to use as outputs for bode plot (signals to perform fft on)
+        self.columns = {}
+        for file, df in self.dataframes.items():
+            print(f"\nColumns in {file}:")
+            for i, col in enumerate(df.columns):
+                print(f"Column {i}: {col}")
+            y_idx = input(f"\nEnter index of column(s) to perform fft from {file} (comma separated): ")
+            y_idx_int = [int(x) for x in y_idx.split(',')]
+
+            cur_cols = []
+            for idx in y_idx_int:
+                label = input(f"\nEnter label for signal {idx} for {file} (or press Enter to use column name): ")
+                cur_cols.append((df.columns[idx], label if label else df.columns[idx]))
+            
+            # Store as list of tuples
+            self.columns[file] = tuple(cur_cols)
+
+        if self.verbose:
+            print("\nSelected columns for plotting:")
+            for file, col in self.columns.items():
+                for (y_col, lab) in self.columns[file]:
+                    print(f"{file}: y -> {y_col}, label -> {lab}")
+            print("\n\n\n\n")
+        
+        self.plot_data()
+
     def plot_data(self):
         # Plots the selected data with given customizations.
         # Set plot style
@@ -298,8 +349,7 @@ class Plotter:
             self.save_data_plot()
             plt.show()
 
-
-        else:
+        elif self.plot_type == 'single_axis':
             if not self.figsize:
                 self.figsize = (10, 6)
             plt.figure(figsize=self.figsize)
@@ -346,6 +396,98 @@ class Plotter:
 
             self.save_data_plot()
             plt.show()
+
+        elif self.plot_type == 'bode':
+            if not self.figsize:
+                self.figsize = (10, 6)
+            plt.figure(figsize=self.figsize)
+
+            color_counter = 0
+            for file, df in self.dataframes.items():
+                for (y_col, label) in self.columns[file]:
+
+                    # Subtract mean to remove DC component and skip samples if specified
+                    input_signal = self.x_data_values - np.mean(self.x_data_values)
+
+                    # Create frequency array
+                    n = len(input_signal)
+                    d = 1 / self.sampling_rate  # Sampling interval
+                    freq = np.fft.rfftfreq(n, d) # Frequency bins
+
+                    # Resample output if necessary to match lengths
+                    if n != len(df[y_col]):
+                        # Interpolate to match lengths
+                        f_interp = interp1d(np.linspace(0, 1, len(df[y_col])), df[y_col], kind='linear', fill_value="extrapolate")
+                        output_resampled = f_interp(np.linspace(0, 1, n))
+                        output_signal = output_resampled - np.mean(output_resampled)
+                    else:
+                        output_signal = df[y_col] - np.mean(df[y_col])
+
+                    # Compute FFTs
+                    input_fft = np.fft.rfft(input_signal)
+                    output_fft = np.fft.rfft(output_signal)
+                    H = output_fft / input_fft
+
+                    # # Smooth H
+                    # window_size = 7  # Must be odd
+                    # H_magnitude = np.abs(H)
+                    # H_phase = np.angle(H)
+                    # H_magnitude_smooth = np.convolve(H_magnitude, np.ones(window_size)/window_size, mode='same')
+                    # H_phase_smooth = np.convolve(H_phase, np.ones(window_size)/window_size, mode='same')
+                    # H = H_magnitude_smooth * np.exp(1j * H_phase_smooth)
+                    # print(f"Smoothing FFT data with moving average, window size = {window_size}")
+
+                    # Compute magnitude and phase
+                    magnitude = 20 * np.log10(np.abs(H))
+                    phase = np.angle(H, deg=True)
+
+
+                    # Plot Bode plots
+                    plt.subplot(2, 1, 1, label = "bode_magnitude")
+                    plt.semilogx(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
+                    plt.ylabel('Magnitude (dB)')
+                    plt.grid(which='both', axis='both')
+                    if self.ylimits1:
+                        plt.ylim(self.ylimits1)
+                    plt.xlim(self.xlimits if self.xlimits else (self.start_freq, self.end_freq))
+
+                    plt.subplot(2, 1, 2, label = "bode_phase")
+                    plt.semilogx(freq, phase, color=colors[color_counter], alpha=1, label=label)
+                    plt.xlabel('Frequency (Hz)')
+                    plt.ylabel('Phase (deg)')
+                    plt.grid(which='both', axis='both')
+                    if self.ylimits2:
+                        plt.ylim(self.ylimits2)
+                    plt.xlim(self.xlimits if self.xlimits else (self.start_freq, self.end_freq))
+
+                    color_counter += 1
+
+            if self.title:
+                if self.title_fontsize is False:
+                    plt.title(self.title)
+                else:
+                    plt.title(self.title, fontsize=self.title_fontsize)
+            if self.tick_fontsize is False:
+                plt.tick_params(axis='x')  # Change x-axis tick label font size
+                plt.tick_params(axis='y')  # Change y-axis tick label font size
+            else:
+                plt.tick_params(axis='x', labelsize=self.tick_fontsize)  # Change x-axis tick label font size
+                plt.tick_params(axis='y', labelsize=self.tick_fontsize)  # Change y-axis tick label font size
+            if self.legend:
+                # remove duplicate labels in legend
+                handles, labels = plt.gca().get_legend_handles_labels()
+                by_label = dict(zip(labels, handles))
+                if self.legend_fontsize is False:
+                    plt.legend(by_label.values(), by_label.keys(), loc = 'lower right')
+                else:
+                    plt.legend(by_label.values(), by_label.keys(), fontsize=self.legend_fontsize)
+            # plt.grid()
+
+            self.save_data_plot()
+            plt.show()
+
+        else:
+            print("Error with plot type.")
 
     def save_data_plot(self):
         # Asks user if they want to save the data used for plotting to a pickle file AND/OR save the plot as an image file.
