@@ -15,7 +15,7 @@
 - `plot_pickle()`: Plots from a pickle file. Cannot reselect data, but you can change plot parameters.
 - `plot_single_axis()`: Plots all selected data on a single axis. Up to 10 different colors.
 - `plot_twin_axes()`: Plots selected data on two different axes. User selects which axis for each array. 
-- `plot_bode(start_freq, end_freq, sampling_rate)`: Creates Bode plots on the same axes for user-selected input and output signal(s). Optional smoothing function in `PlotterClass.py`.
+- `plot_bode(start_freq, end_freq, sampling_rate)`: Creates Bode plots on the same axes for user-selected input and output signal(s). Assumes linear chirp input. Optional smoothing function in `PlotterClass.py`.
 
 ### Notes:
 1. Data must be in .csv or .xlsx files (doesn't matter which). Column titles must be in first row.
