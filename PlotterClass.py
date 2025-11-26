@@ -453,7 +453,8 @@ class Plotter:
                     plt.xlim(self.xlimits if self.xlimits else (self.start_freq, self.end_freq))
 
                     plt.subplot(2, 1, 2, label = "bode_phase")
-                    plt.semilogx(freq, phase, color=colors[color_counter], alpha=1, label=label)
+                    # plt.semilogx(freq, phase, color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(freq, phase, color=colors[color_counter], alpha=1, label=label)
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Phase (deg)')
                     plt.grid(which='both', axis='both')
