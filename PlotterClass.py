@@ -444,7 +444,8 @@ class Plotter:
 
                     # Plot Bode plots
                     plt.subplot(2, 1, 1, label = "bode_magnitude")
-                    plt.semilogx(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
+                    # plt.semilogx(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
                     plt.ylabel('Magnitude (dB)')
                     plt.grid(which='both', axis='both')
                     if self.ylimits1:
