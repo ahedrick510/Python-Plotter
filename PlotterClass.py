@@ -12,11 +12,13 @@
 # The user points the class to a folder with data files (xlsx or csv) and then selects which files and columns to plot.
 # The user can customize the plot with titles, axis labels, axis limits, and legend options
 
+import data
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import pickle
+from scipy.io import loadmat
 from scipy.interpolate import interp1d
 import scienceplots
 
@@ -88,7 +90,7 @@ class Plotter:
 
         # Make a list of data files
         path = self.foldername
-        self.data_files = [f for f in os.listdir(path) if f.endswith('.xlsx') or f.endswith('.csv')]
+        self.data_files = [f for f in os.listdir(path) if f.endswith('.xlsx') or f.endswith('.csv') or f.endswith('.mat')]
         data_file_len = len(self.data_files)
 
         # Prompt user to select files
@@ -113,6 +115,9 @@ class Plotter:
                 self.dataframes[name] = pd.read_excel(os.path.join(path, file))
             elif file.endswith('.csv'):
                 self.dataframes[name] = pd.read_csv(os.path.join(path, file))
+            elif file.endswith('.mat'):
+                self.dataframes[name] = self.mat_struct_to_dataframe(path, file)
+                print(self.dataframes[name].head())
 
         self.selected_files = [self.data_files[i] for i in self.selected_indices]
 
@@ -517,3 +522,35 @@ class Plotter:
                 plt.savefig(self.foldername + '\\Plots\\' + self.title + '.png',bbox_inches='tight',dpi=300)
                 print(f"Plot saved to {self.foldername} as {self.title + '.png'}")
 
+    def mat_struct_to_dataframe(self, path: str, file: str) -> pd.DataFrame:
+        #  Load a .mat file containing a struct and convert its double vector fields
+        # into a DataFrame. Non-double fields (nested structs, etc.) are ignored
+
+        mat = loadmat(os.path.join(path, file), squeeze_me=True)
+
+        columns = {}
+        for key, value in mat.items():
+            # Skip MATLAB metadata keys
+            if key.startswith("__"):
+                continue
+
+            # Keep only numpy arrays with a floating-point dtype
+            if not isinstance(value, np.ndarray):
+                continue
+            if not np.issubdtype(value.dtype, np.floating):
+                continue
+
+            columns[key] = value.flatten()
+
+        if not columns:
+            raise ValueError("No double vector fields found in the .mat file.")
+
+        lengths = {name: arr.size for name, arr in columns.items()}
+        unique_lengths = set(lengths.values())
+        if len(unique_lengths) > 1:
+            raise ValueError(
+                f"Double fields have mismatched lengths: {lengths}. "
+                "Cannot build a rectangular DataFrame."
+            )
+
+        return pd.DataFrame(columns)
