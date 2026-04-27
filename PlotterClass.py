@@ -1,7 +1,7 @@
 ###################################### 
 # PLOTTER CLASS ######################
 # BY: ALEXANDER HEDRICK ##############
-# LAST UPDATED: 2025-11-20 ###########
+# LAST UPDATED: 2026-04-27 ###########
 ######################################
 
 # The goal of this class is to make plotting data as easy, quick, and customizable as possible,
@@ -352,7 +352,7 @@ class Plotter:
             # ax1.grid()
 
             self.save_data_plot()
-            plt.show()
+            # plt.show()
 
         elif self.plot_type == 'single_axis':
             if not self.figsize:
@@ -400,7 +400,7 @@ class Plotter:
             # plt.grid()
 
             self.save_data_plot()
-            plt.show()
+            # plt.show()
 
         elif self.plot_type == 'bode':
             if not self.figsize:
@@ -491,7 +491,7 @@ class Plotter:
             # plt.grid()
 
             self.save_data_plot()
-            plt.show()
+            # plt.show()
 
         else:
             print("Error with plot type.")
@@ -530,11 +530,11 @@ class Plotter:
 
         columns = {}
         for key, value in mat.items():
-            # Skip MATLAB metadata keys
+            # skip MATLAB metadata keys
             if key.startswith("__"):
                 continue
 
-            # Keep only numpy arrays with a floating-point dtype
+            # keep only numpy arrays with a floating-point dtype
             if not isinstance(value, np.ndarray):
                 continue
             if not np.issubdtype(value.dtype, np.floating):
