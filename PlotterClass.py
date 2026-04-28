@@ -362,10 +362,7 @@ class Plotter:
             color_counter = 0
             for file, df in self.dataframes.items():
                 for (y_col, label) in self.columns[file]:
-                    if color_counter == 0:
-                        plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter], alpha=1, label=label)
-                    if color_counter == 1:
-                        plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter+1], alpha=1, linestyle = '--', label=label)
+                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter % len(colors)], alpha=1, label=label)
                     color_counter += 1
 
             if self.title:
