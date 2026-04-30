@@ -470,6 +470,16 @@ class Window3_Config(tk.Tk):
         columns = getattr(obj, "columns", None)
         plot_type = getattr(obj, "plot_type", "unknown")
 
+        # Show or hide Y2 limits depending on the pickle's plot type
+        needs_y2 = plot_type in ("twin_axes", "bode")
+        if hasattr(self, "_y2_label_widget"):
+            if needs_y2:
+                self._y2_label_widget.grid()
+                self._y2_entry_frame.grid()
+            else:
+                self._y2_label_widget.grid_remove()
+                self._y2_entry_frame.grid_remove()
+
         if not columns:
             tk.Label(self._pickle_labels_frame,
                      text="(No column data found in this pickle.)",
@@ -613,11 +623,16 @@ class Window3_Config(tk.Tk):
             om["menu"].configure(bg=BG, fg=TEXT, font=FONT_S)
             om.grid(row=0, column=1, sticky="w", padx=(0, 8))
 
-            # Input col
-            input_var = tk.StringVar(value=cols[0])
+            # Input col -- can come from ANY loaded file
+            # Build flat list of "filename :: colname" strings across all files
+            all_input_opts = []
+            for f, df in self.dataframes.items():
+                for c in df.columns:
+                    all_input_opts.append(f"{f} :: {c}")
+            input_var = tk.StringVar(value=all_input_opts[0] if all_input_opts else "")
             tk.Label(row, text="Input col:", bg=row_bg, fg=TEXT_DIM,
                      font=FONT_S, width=9, anchor="w").grid(row=0, column=2, sticky="w")
-            om2 = tk.OptionMenu(row, input_var, *cols)
+            om2 = tk.OptionMenu(row, input_var, *all_input_opts)
             om2.configure(bg=BG, fg=TEXT, font=FONT_S,
                           activebackground=BORDER, highlightthickness=0, relief="flat")
             om2["menu"].configure(bg=BG, fg=TEXT, font=FONT_S)
@@ -733,7 +748,7 @@ class Window3_Config(tk.Tk):
         tk.Label(lim_row2, text=" to ", bg=PANEL, fg=TEXT_DIM, font=FONT_S).pack(side="left")
         make_entry(lim_row2, textvariable=self._ylim1_hi, width=8).pack(side="left")
 
-        if self.mode in ("plot_twin_axes", "plot_bode"):
+        if self.mode in ("plot_twin_axes", "plot_bode", "plot_pickle"):
             tk.Label(outer, text="Y2 Limits", bg=PANEL, fg=TEXT_DIM,
                      font=FONT_S, width=14, anchor="w").grid(row=12, column=0, sticky="w", pady=3)
             lim_row3 = tk.Frame(outer, bg=PANEL)
@@ -741,6 +756,13 @@ class Window3_Config(tk.Tk):
             make_entry(lim_row3, textvariable=self._ylim2_lo, width=8).pack(side="left")
             tk.Label(lim_row3, text=" to ", bg=PANEL, fg=TEXT_DIM, font=FONT_S).pack(side="left")
             make_entry(lim_row3, textvariable=self._ylim2_hi, width=8).pack(side="left")
+            # Keep refs so _on_pickle_select can show/hide for pickle mode
+            self._y2_label_widget = outer.grid_slaves(row=12, column=0)[0]
+            self._y2_entry_frame  = lim_row3
+            # Hide initially for pickle mode (shown once a pickle is loaded)
+            if self.mode == "plot_pickle":
+                self._y2_label_widget.grid_remove()
+                self._y2_entry_frame.grid_remove()
 
         # Figure size + font sizes
         section_label(body, "FIGURE & FONT SIZES (leave blank for defaults)").pack(fill="x", pady=(16, 8))
@@ -1009,10 +1031,15 @@ class Window3_Config(tk.Tk):
             pairs = []
             for fname, rows in self._y_rows.items():
                 for rd in rows:
-                    out_col = rd["col"].get()
-                    in_col  = rd["input"].get()
-                    lbl     = rd["label"].get().strip() or out_col
-                    pairs.append((fname, out_col, in_col, lbl))
+                    out_col    = rd["col"].get()
+                    input_key  = rd["input"].get()   # "filename :: colname"
+                    lbl        = rd["label"].get().strip() or out_col
+                    # Parse the "file :: col" string back into components
+                    if " :: " in input_key:
+                        in_fname, in_col = input_key.split(" :: ", 1)
+                    else:
+                        in_fname, in_col = fname, input_key
+                    pairs.append((fname, out_col, in_fname, in_col, lbl))
 
             if not pairs:
                 messagebox.showerror("Error", "No output signals configured.")
@@ -1037,10 +1064,11 @@ class Window3_Config(tk.Tk):
             figsize = plotter.figsize or (10, 6)
             fig, (ax_mag, ax_phase) = plt.subplots(2, 1, figsize=figsize)
 
-            for ci, (fname, out_col, in_col, lbl) in enumerate(pairs):
-                df           = self.dataframes[fname]
-                input_signal = np.array(df[in_col]) - np.mean(df[in_col])
-                output_raw   = np.array(df[out_col])
+            for ci, (fname, out_col, in_fname, in_col, lbl) in enumerate(pairs):
+                df_out       = self.dataframes[fname]
+                df_in        = self.dataframes[in_fname]
+                input_signal = np.array(df_in[in_col]) - np.mean(df_in[in_col])
+                output_raw   = np.array(df_out[out_col])
 
                 n    = len(input_signal)
                 d    = 1.0 / plotter.sampling_rate
