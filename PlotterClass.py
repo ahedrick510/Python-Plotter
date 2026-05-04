@@ -430,17 +430,18 @@ class Plotter:
                     output_fft = np.fft.rfft(output_signal)
                     H = output_fft / input_fft
 
-                    # # Smooth H
-                    # window_size = 7  # Must be odd
-                    # H_magnitude = np.abs(H)
-                    # H_phase = np.angle(H)
-                    # H_magnitude_smooth = np.convolve(H_magnitude, np.ones(window_size)/window_size, mode='same')
-                    # H_phase_smooth = np.convolve(H_phase, np.ones(window_size)/window_size, mode='same')
-                    # H = H_magnitude_smooth * np.exp(1j * H_phase_smooth)
-                    # print(f"Smoothing FFT data with moving average, window size = {window_size}")
+                    # Smooth H
+                    window_size = 7  # Must be odd
+                    H_magnitude = np.abs(H)
+                    H_phase = np.angle(H)
+                    H_magnitude_smooth = np.convolve(H_magnitude, np.ones(window_size)/window_size, mode='same')
+                    H_phase_smooth = np.convolve(H_phase, np.ones(window_size)/window_size, mode='same')
+                    H = H_magnitude_smooth * np.exp(1j * H_phase_smooth)
+                    print(f"Smoothing FFT data with moving average, window size = {window_size}")
 
                     # Compute magnitude and phase
-                    magnitude = 20 * np.log10(np.abs(H))
+                    # magnitude = 20 * np.log10(np.abs(H))
+                    magnitude = np.abs(H)
                     phase = np.angle(H, deg=True)
 
 
@@ -448,7 +449,7 @@ class Plotter:
                     plt.subplot(2, 1, 1, label = "bode_magnitude")
                     # plt.semilogx(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
                     plt.plot(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
-                    plt.ylabel('Magnitude (dB)')
+                    plt.ylabel('Magnitude (abs)')
                     plt.grid(which='both', axis='both')
                     if self.ylimits1:
                         plt.ylim(self.ylimits1)
