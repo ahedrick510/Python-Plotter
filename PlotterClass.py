@@ -1,7 +1,7 @@
 ###################################### 
 # PLOTTER CLASS ######################
 # BY: ALEXANDER HEDRICK ##############
-# LAST UPDATED: 2026-04-27 ###########
+# LAST UPDATED: 2026-05-05 ###########
 ######################################
 
 # The goal of this class is to make plotting data as easy, quick, and customizable as possible,
@@ -24,7 +24,7 @@ import scienceplots
 
 # Plotter class
 class Plotter:
-    def __init__(self, foldername, plotstyle, verbose, title, xlabel, ylabel1, ylabel2, xlimits, ylimits1, ylimits2, legend, figsize, title_fontsize, label_fontsize, tick_fontsize, legend_fontsize):
+    def __init__(self, foldername, plotstyle, verbose, title, xlabel, ylabel1, ylabel2, xlimits, ylimits1, ylimits2, legend, figsize, title_fontsize, label_fontsize, tick_fontsize, legend_fontsize, linewidth):
         self.foldername = foldername # folder name where the data is stored
         self.plotstyle = plotstyle # plot style to use
         self.title = title # title of the plot
@@ -41,6 +41,7 @@ class Plotter:
         self.label_fontsize = label_fontsize # label font size
         self.tick_fontsize = tick_fontsize # tick font size
         self.legend_fontsize = legend_fontsize # legend font size
+        self.linewidth = linewidth # line width for plots
 
     def plot_pickle(self):
         # Load a previously saved pickle file containing a Plotter class instance
@@ -296,9 +297,9 @@ class Plotter:
             for file, df in self.dataframes.items():
                 for (y_col, y_ax, label) in self.columns[file]:
                     if y_ax == 1:
-                        ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax1_color, alpha=1, label=label)  
+                        ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax1_color, alpha=1, label=label, lw=self.linewidth)  
                     else:
-                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, linestyle = "--", label=label)
+                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, linestyle = "--", label=label, lw=self.linewidth)
 
 
             # set axis colors
@@ -362,7 +363,7 @@ class Plotter:
             color_counter = 0
             for file, df in self.dataframes.items():
                 for (y_col, label) in self.columns[file]:
-                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter % len(colors)], alpha=1, label=label)
+                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter % len(colors)], alpha=1, label=label, lw=self.linewidth)
                     color_counter += 1
 
             if self.title:
@@ -448,7 +449,7 @@ class Plotter:
                     # Plot Bode plots
                     plt.subplot(2, 1, 1, label = "bode_magnitude")
                     # plt.semilogx(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
-                    plt.plot(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(freq, magnitude, color=colors[color_counter], alpha=1, label=label, lw=self.linewidth)
                     plt.ylabel('Magnitude (abs)')
                     plt.grid(which='both', axis='both')
                     if self.ylimits1:
@@ -457,7 +458,7 @@ class Plotter:
 
                     plt.subplot(2, 1, 2, label = "bode_phase")
                     # plt.semilogx(freq, phase, color=colors[color_counter], alpha=1, label=label)
-                    plt.plot(freq, phase, color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(freq, phase, color=colors[color_counter], alpha=1, label=label, lw=self.linewidth)
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Phase (deg)')
                     plt.grid(which='both', axis='both')

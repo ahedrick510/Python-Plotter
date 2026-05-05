@@ -347,18 +347,21 @@ class Window3_Config(tk.Tk):
         self._ylim2_hi    = tk.StringVar(value="")
         self._legend      = tk.BooleanVar(value=True)
         self._verbose     = tk.BooleanVar(value=False)
-        self._figw        = tk.StringVar(value="10")
-        self._figh        = tk.StringVar(value="6")
+        self._figw        = tk.StringVar(value="7")
+        self._figh        = tk.StringVar(value="4")
         self._title_fs    = tk.StringVar(value="")
         self._label_fs    = tk.StringVar(value="")
         self._tick_fs     = tk.StringVar(value="")
-        self._legend_fs   = tk.StringVar(value="")
+        self._legend_fs   = tk.StringVar(value="5")
+        self._linewidth   = tk.StringVar(value="2") # default line width
 
         # save options
-        self._save_pickle  = tk.BooleanVar(value=False)
-        self._pickle_name  = tk.StringVar(value="")
-        self._save_png     = tk.BooleanVar(value=False)
-        self._png_name     = tk.StringVar(value="")
+        self._save_pickle      = tk.BooleanVar(value=False)
+        self._pickle_name      = tk.StringVar(value="")
+        self._save_png         = tk.BooleanVar(value=False)
+        self._png_name         = tk.StringVar(value="")
+        self._display_plot     = tk.BooleanVar(value=True)
+        self._save_font_scale  = tk.StringVar(value="1.5")
 
         # bode-specific
         self._start_freq  = tk.StringVar(value="50")
@@ -769,21 +772,33 @@ class Window3_Config(tk.Tk):
         sz = tk.Frame(body, bg=PANEL)
         sz.pack(anchor="w")
 
-        for ci, (lbl, var) in enumerate([
-                ("Fig Width",  self._figw),
-                ("Fig Height", self._figh),
-                ("Title FS",   self._title_fs),
-                ("Label FS",   self._label_fs),
-                ("Tick FS",    self._tick_fs),
-                ("Legend FS",  self._legend_fs)]):
-            tk.Label(sz, text=lbl, bg=PANEL, fg=TEXT_DIM,
-                     font=FONT_S).grid(row=0, column=ci*2, sticky="w", padx=(0, 4))
-            make_entry(sz, textvariable=var, width=6).grid(row=0, column=ci*2+1, padx=(0, 12))
+        items = [
+            ("Fig Width",  self._figw),
+            ("Fig Height", self._figh),
+            ("Title FS",   self._title_fs),
+            ("Label FS",   self._label_fs),
+            ("Tick FS",    self._tick_fs),
+            ("Legend FS",  self._legend_fs),
+            ("Line Width", self._linewidth),
+        ]
 
-        # Legend + Verbose
+        max_cols = 4  # number of label+entry pairs per row
+
+        for i, (lbl, var) in enumerate(items):
+            row = i // max_cols
+            col = (i % max_cols) * 2
+
+            tk.Label(sz, text=lbl, bg=PANEL, fg=TEXT_DIM,
+                    font=FONT_S).grid(row=row, column=col, sticky="w", padx=(0, 4), pady=2)
+
+            make_entry(sz, textvariable=var, width=6)\
+                .grid(row=row, column=col+1, padx=(0, 12), pady=2)
+
+        # Legend + Display
         tog = tk.Frame(body, bg=PANEL, pady=8)
         tog.pack(anchor="w")
-        for var, lbl in [(self._legend, "Show Legend"), (self._verbose, "Verbose Output")]:
+        for var, lbl in [(self._legend, "Show Legend"),
+                         (self._display_plot, "Display Plot")]:
             tk.Checkbutton(tog, text=lbl, variable=var,
                            bg=PANEL, fg=TEXT, selectcolor=BG,
                            activebackground=PANEL, font=FONT_B,
@@ -791,6 +806,16 @@ class Window3_Config(tk.Tk):
 
         # Save options
         section_label(body, "SAVE OPTIONS").pack(fill="x", pady=(16, 8))
+
+        # Save font scale
+        scale_row = tk.Frame(body, bg=PANEL)
+        scale_row.pack(anchor="w", pady=(0, 10))
+        tk.Label(scale_row, text="Save font scale:", bg=PANEL, fg=TEXT_DIM,
+                 font=FONT_B, width=16, anchor="w").pack(side="left")
+        make_entry(scale_row, textvariable=self._save_font_scale, width=6).pack(side="left")
+        tk.Label(scale_row,
+                 text="  multiplies all font sizes for the saved PNG  (default 1.5)",
+                 bg=PANEL, fg=TEXT_DIM, font=FONT_S).pack(side="left", padx=(6, 0))
 
         # Pickle save
         pkl_row = tk.Frame(body, bg=PANEL)
@@ -855,7 +880,7 @@ class Window3_Config(tk.Tk):
     # -- GUI-driven save (replaces save_data_plot input() prompts) ------------
     def _gui_save(self, plotter, fig=None):
         """Save pickle and/or PNG. fig must be the fully-drawn Figure object.
-        PNG is saved immediately from the figure; pickle serialises the plotter state."""
+        PNG is saved with font sizes scaled by _save_font_scale."""
 
         # Pickle save -- no figure needed, order doesn't matter
         if self._save_pickle.get():
@@ -870,7 +895,7 @@ class Window3_Config(tk.Tk):
                     pickle.dump(plotter, f)
                 print(f"Settings pickled to: {pkl_path}")
 
-        # PNG save -- must happen BEFORE plt.show() while the figure is populated
+        # PNG save -- apply font scale, save, then restore original sizes
         if self._save_png.get():
             if fig is None:
                 fig = plt.gcf()
@@ -880,8 +905,27 @@ class Window3_Config(tk.Tk):
             png_dir = os.path.join(self.folder, "Plots")
             os.makedirs(png_dir, exist_ok=True)
             png_path = os.path.join(png_dir, png_name + ".png")
+
+            # Scale all text in the figure for the saved file, then restore
+            scale = self._parse_float(self._save_font_scale.get(), default=1.0)
+            self._scale_fig_fonts(fig, scale)
             fig.savefig(png_path, bbox_inches="tight", dpi=300)
+            self._scale_fig_fonts(fig, 1.0 / scale)   # restore
             print(f"Plot saved to: {png_path}")
+
+    @staticmethod
+    def _scale_fig_fonts(fig, scale):
+        """Multiply every text element's font size in fig by scale."""
+        for ax in fig.axes:
+            for item in ([ax.title, ax.xaxis.label, ax.yaxis.label]
+                         + ax.get_xticklabels() + ax.get_yticklabels()):
+                item.set_fontsize(item.get_fontsize() * scale)
+            legend = ax.get_legend()
+            if legend:
+                for text in legend.get_texts():
+                    text.set_fontsize(text.get_fontsize() * scale)
+                legend.get_title().set_fontsize(
+                    legend.get_title().get_fontsize() * scale)
 
     # -- Run ------------------------------------------------------------------
     def _run(self):
@@ -914,6 +958,7 @@ class Window3_Config(tk.Tk):
             label_fontsize  = self._parse_fontsize(self._label_fs),
             tick_fontsize   = self._parse_fontsize(self._tick_fs),
             legend_fontsize = self._parse_fontsize(self._legend_fs),
+            linewidth       = self._parse_float(self._linewidth.get(), default=2.0)
         )
 
         from PlotterClass import Plotter
@@ -946,6 +991,7 @@ class Window3_Config(tk.Tk):
             plotpickle.label_fontsize  = plotter.label_fontsize
             plotpickle.tick_fontsize   = plotter.tick_fontsize
             plotpickle.legend_fontsize = plotter.legend_fontsize
+            plotpickle.linewidth       = plotter.linewidth
 
             # Apply any edited labels from the GUI back onto the loaded object
             if self._pickle_label_vars:
@@ -968,7 +1014,10 @@ class Window3_Config(tk.Tk):
             plotpickle.plot_data()
             fig = plt.gcf()           # capture the fully-drawn figure
             self._gui_save(plotpickle, fig=fig)   # save BEFORE show
-            plt.show()
+            if self._display_plot.get():
+                plt.show()
+            else:
+                plt.close(fig)
             return
 
         # ── Inject data into plotter (bypass select_data prompts) ────────────
@@ -996,7 +1045,10 @@ class Window3_Config(tk.Tk):
             plotter.plot_data()
             fig = plt.gcf()                  # capture fully-drawn figure
             self._gui_save(plotter, fig=fig) # save BEFORE show
-            plt.show()
+            if self._display_plot.get():
+                plt.show()
+            else:
+                plt.close(fig)
 
         elif self.mode == "plot_twin_axes":
             plotter.plot_type = "twin_axes"
@@ -1020,7 +1072,10 @@ class Window3_Config(tk.Tk):
             plotter.plot_data()
             fig = plt.gcf()                  # capture fully-drawn figure
             self._gui_save(plotter, fig=fig) # save BEFORE show
-            plt.show()
+            if self._display_plot.get():
+                plt.show()
+            else:
+                plt.close(fig)
 
         elif self.mode == "plot_bode":
             plotter.plot_type     = "bode"
@@ -1112,7 +1167,10 @@ class Window3_Config(tk.Tk):
 
             plt.tight_layout()
             self._gui_save(plotter, fig=fig)  # save BEFORE show
-            plt.show()
+            if self._display_plot.get():
+                plt.show()
+            else:
+                plt.close(fig)
 
 
 # ============================================================================

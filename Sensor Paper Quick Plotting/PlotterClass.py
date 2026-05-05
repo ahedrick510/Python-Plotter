@@ -25,7 +25,7 @@ import scienceplots
 
 # Plotter class
 class Plotter:
-    def __init__(self, foldername, plotstyle, verbose, title, xlabel, ylabel1, ylabel2, xlimits, ylimits1, ylimits2, legend, figsize, title_fontsize, label_fontsize, tick_fontsize, legend_fontsize):
+    def __init__(self, foldername, plotstyle, verbose, title, xlabel, ylabel1, ylabel2, xlimits, ylimits1, ylimits2, legend, figsize, title_fontsize, label_fontsize, tick_fontsize, legend_fontsize, linewidth):
         self.foldername = foldername # folder name where the data is stored
         self.plotstyle = plotstyle # plot style to use
         self.title = title # title of the plot
@@ -42,6 +42,7 @@ class Plotter:
         self.label_fontsize = label_fontsize # label font size
         self.tick_fontsize = tick_fontsize # tick font size
         self.legend_fontsize = legend_fontsize # legend font size
+        self.linewidth = linewidth # line width for plots
 
     def plot_pickle(self):
         # Load a previously saved pickle file containing a Plotter class instance
@@ -297,9 +298,9 @@ class Plotter:
             for file, df in self.dataframes.items():
                 for (y_col, y_ax, label) in self.columns[file]:
                     # if y_ax == 1:
-                    #     ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax1_color, alpha=1, label=label)  
+                    #     ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax1_color, alpha=1, label=label, linewidth=self.linewidth)  
                     # else:
-                    #     ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, linestyle = "--", label=label)
+                    #     ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, linestyle = "--", label=label, linewidth=self.linewidth)
                     if y_ax == 1:
                         cur_col = df[y_col] - np.mean(df[y_col]) # remove DC component
                         ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), cur_col, color=ax1_color, alpha=1, label=label)  
@@ -307,7 +308,7 @@ class Plotter:
                         cur_col = df[y_col] - np.mean(df[y_col]) # remove DC component
                         PX_to_DEG = 4.04 # conversion factor from pixels to degrees for FLAAIR v11p4 and PVDF Wings Testing\2026-03-25 FLAAIR 14 NOT v11p4, determined experimentally
                         cur_col = cur_col * PX_to_DEG # convert from pixels to degrees
-                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), cur_col, color=ax2_color, alpha=1, linestyle = "--", label=label)
+                        ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), cur_col, color=ax2_color, alpha=1, linestyle = "--", label=label, linewidth=self.linewidth)
 
 
             # set axis colors
@@ -371,7 +372,7 @@ class Plotter:
             color_counter = 0
             for file, df in self.dataframes.items():
                 for (y_col, label) in self.columns[file]:
-                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter % len(colors)], alpha=1, label=label)
+                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter % len(colors)], alpha=1, label=label, linewidth=self.linewidth)
                     color_counter += 1
 
             if self.title:
@@ -478,7 +479,7 @@ class Plotter:
                     # Plot Bode plots
                     plt.subplot(2, 1, 1, label = "bode_magnitude")
                     # plt.semilogx(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
-                    plt.plot(freq, magnitude, color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(freq, magnitude, color=colors[color_counter], alpha=1, label=label, linewidth=self.linewidth)
                     plt.ylabel('Stroke Angle (deg)')
                     plt.grid(which='both', axis='both')
                     if self.ylimits1:
@@ -487,7 +488,7 @@ class Plotter:
 
                     plt.subplot(2, 1, 2, label = "bode_phase")
                     # plt.semilogx(freq, phase, color=colors[color_counter], alpha=1, label=label)
-                    plt.plot(freq, phase, color=colors[color_counter], alpha=1, label=label)
+                    plt.plot(freq, phase, color=colors[color_counter], alpha=1, label=label, linewidth=self.linewidth)
                     plt.xlabel('Frequency (Hz)')
                     plt.ylabel('Phase (deg)')
                     plt.grid(which='both', axis='both')
