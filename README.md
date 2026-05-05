@@ -19,12 +19,5 @@
 2. This code assumes each trial takes place over the same amount of time. However, the data columns do NOT need to be the same length (useful if data is recorded at different rates, including for bode plots). This means if you try to plot trials that take DIFFERENT amounts of time, some of the data WILL be plotted INCORRECTLY.
 3. Plots are created in the `plot_data` function in the class, easily modifiable if you need to make any changes (transparency, line types, colors, etc.).
 
-### Old Instructions (before GUI):
-0. Install packages: `numpy`, `pandas`, `matplotlib`, `os`, `scipy`, `pickle`, and `tkinter`. `scienceplots` recommended but not required.
-1. Open `Plotter.py`.
-2. Make sure all data you want to plot is in one folder, copy that folder name into variable `foldername`.
-3. Make any desired edits to the plot format variables. Uncomment ONE of the functions at the bottom of `Plotter.py`.
-4. Run code, follow instructions.
-
 ### Example:
 ![alt text](https://github.com/ahedrick510/Python-Plotter/blob/main/Sample%20Data/Plots/all-data-plotted.png "science plot example")
