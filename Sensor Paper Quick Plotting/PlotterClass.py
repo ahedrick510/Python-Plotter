@@ -1,7 +1,6 @@
 ###################################### 
 # PLOTTER CLASS ######################
 # BY: ALEXANDER HEDRICK ##############
-# LAST UPDATED: 2026-04-27 ###########
 ######################################
 
 # The goal of this class is to make plotting data as easy, quick, and customizable as possible,
