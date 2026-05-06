@@ -19,7 +19,7 @@ import os
 import pickle
 from scipy.io import loadmat
 from scipy.interpolate import interp1d
-from scipy.signal import iirnotch, filtfilt
+from scipy.signal import iirnotch, filtfilt, savgol_filter
 import scienceplots
 
 # Plotter class
@@ -371,7 +371,19 @@ class Plotter:
             color_counter = 0
             for file, df in self.dataframes.items():
                 for (y_col, label) in self.columns[file]:
-                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=colors[color_counter % len(colors)], alpha=1, label=label, linewidth=self.linewidth)
+
+                    # Subtract mean to remove DC component and notch filter 60 Hz
+                    output_signal = df[y_col] - np.mean(df[y_col]) # remove DC component
+                    samp_rate = 10000  # hardcoded sampling rate for notch filter, should be updated to be user input or read from file
+                    b, a = iirnotch(60, 30, samp_rate)
+                    output_signal = filtfilt(b, a, output_signal)
+                    print("Applying 60 Hz notch filter to remove noise from power lines")
+
+                    # Apply Savitzky-Golay filter to smooth the signal
+                    output_signal = savgol_filter(output_signal, 201, 3)  # window size 201, polynomial order 3
+                    print("Applying Savitzky-Golay filter to smooth the signal")
+
+                    plt.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), output_signal, color=colors[color_counter % len(colors)], alpha=1, label=label, linewidth=self.linewidth)
                     color_counter += 1
 
             if self.title:
