@@ -302,11 +302,18 @@ class Plotter:
                     #     ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), df[y_col], color=ax2_color, alpha=1, linestyle = "--", label=label, linewidth=self.linewidth)
                     if y_ax == 1:
                         cur_col = df[y_col] - np.mean(df[y_col]) # remove DC component
+                        # notch filter and savgol filter to clean up signal for PVDF data
+                        samp_rate = 10000 
+                        b, a = iirnotch(60, 10, samp_rate)
+                        cur_col = filtfilt(b, a, cur_col)
+                        cur_col = savgol_filter(cur_col, 201, 3)  # window size 201, polynomial order 3
+                        print("Applying 60 Hz notch filter and Savitzky-Golay filter to clean up signal for PVDF data on first y-axis")
                         ax1.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), cur_col, color=ax1_color, alpha=1, label=label)  
                     else:
-                        cur_col = df[y_col] - np.mean(df[y_col]) # remove DC component
-                        PX_to_DEG = 4.04 # conversion factor from pixels to degrees for FLAAIR v11p4 and PVDF Wings Testing\2026-03-25 FLAAIR 14 NOT v11p4, determined experimentally
-                        cur_col = cur_col * PX_to_DEG # convert from pixels to degrees
+                        cur_col = df[y_col]
+                        # cur_col = df[y_col] - np.mean(df[y_col]) # remove DC component
+                        # PX_to_DEG = 4.04 # conversion factor from pixels to degrees for FLAAIR v11p4 and PVDF Wings Testing\2026-03-25 FLAAIR 14 NOT v11p4, determined experimentally
+                        # cur_col = cur_col * PX_to_DEG # convert from pixels to degrees
                         ax2.plot(np.linspace(self.x_data_values[0],self.x_data_values[-1],len(df[y_col])), cur_col, color=ax2_color, alpha=1, linestyle = "--", label=label, linewidth=self.linewidth)
 
 

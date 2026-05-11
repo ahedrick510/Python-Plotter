@@ -472,7 +472,7 @@ class Window3_Config(tk.Tk):
         columns = getattr(obj, "columns", None)
         plot_type = getattr(obj, "plot_type", "unknown")
 
-        # Show or hide Y2 limits depending on the pickle's plot type
+        # Show or hide Y2 limits and Y Label 2 depending on the pickle's plot type
         needs_y2 = plot_type in ("twin_axes", "bode")
         if hasattr(self, "_y2_label_widget"):
             if needs_y2:
@@ -481,6 +481,13 @@ class Window3_Config(tk.Tk):
             else:
                 self._y2_label_widget.grid_remove()
                 self._y2_entry_frame.grid_remove()
+        if hasattr(self, "_ylabel2_label_widget"):
+            if needs_y2:
+                self._ylabel2_label_widget.grid()
+                self._ylabel2_entry_widget.grid()
+            else:
+                self._ylabel2_label_widget.grid_remove()
+                self._ylabel2_entry_widget.grid_remove()
 
         if not columns:
             tk.Label(self._pickle_labels_frame,
@@ -729,8 +736,14 @@ class Window3_Config(tk.Tk):
         row_pair(outer, 1, "Title",   self._title)
         row_pair(outer, 2, "X Label", self._xlabel)
         row_pair(outer, 3, "Y Label 1", self._ylabel1)
-        if self.mode in ("plot_twin_axes",):
+        if self.mode in ("plot_twin_axes", "plot_bode", "plot_pickle"):
             row_pair(outer, 4, "Y Label 2", self._ylabel2)
+            # Save refs so _on_pickle_select can show/hide for pickle mode
+            self._ylabel2_label_widget = outer.grid_slaves(row=4, column=0)[0]
+            self._ylabel2_entry_widget = outer.grid_slaves(row=4, column=1)[0]
+            if self.mode == "plot_pickle":
+                self._ylabel2_label_widget.grid_remove()
+                self._ylabel2_entry_widget.grid_remove()
 
         # Limits
         tk.Label(outer, text="X Limits", bg=PANEL, fg=TEXT_DIM,
